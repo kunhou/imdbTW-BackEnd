@@ -1,5 +1,5 @@
 # IMDB TW Back-End
-### IMDB 後台API & 爬蟲
+### IMDB API & crawler
 
 ## Demo
 
