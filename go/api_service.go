@@ -82,6 +82,7 @@ func main() {
 			"count":  len(movies),
 		})
 	})
+	router.Static("/static", "../static")
 	router.Run(":8080")
 }
 
