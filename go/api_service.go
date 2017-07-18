@@ -93,6 +93,7 @@ func writeContentType(w http.ResponseWriter, value []string) {
 }
 
 func jsonGoesToHTML(c *gin.Context, code int, obj interface{}) {
+	c.Writer.Header().Add("Access-Control-Allow-Origin", "*")
 	c.Status(code)
 	writeContentType(c.Writer, []string{"application/json; charset=utf-8"})
 	enc := json.NewEncoder(c.Writer)
