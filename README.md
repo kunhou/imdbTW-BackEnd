@@ -16,3 +16,13 @@ $ python movie_crawler.py
 ```
 $ python movie_api.py
 ```
+
+## API
+### To get this week api
+/this_week
+
+### To get other week data
+/other
+
+### To get movie by id
+/movie/:id

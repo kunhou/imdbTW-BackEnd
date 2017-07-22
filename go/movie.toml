@@ -1,0 +1,8 @@
+[db]
+server = "127.0.0.1"
+port = 3306
+database = "movie"
+user = "root"
+password = "root"
+[server]
+port = 8080

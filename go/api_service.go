@@ -5,16 +5,46 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/spf13/viper"
 )
 
 func main() {
-	db, err := sql.Open("mysql", "root:root@tcp(127.0.0.1:3306)/movie")
+	var (
+		server      string
+		port        int
+		database    string
+		user        string
+		password    string
+		server_port int
+	)
+	viper.SetConfigName("movie")
+	viper.AddConfigPath(".")
+	err := viper.ReadInConfig()
+	if err != nil {
+		fmt.Println("Config file not found...")
+	} else {
+		server = viper.GetString("db.server")
+		port = viper.GetInt("db.port")
+		database = viper.GetString("db.database")
+		user = viper.GetString("db.user")
+		password = viper.GetString("db.password")
+		server_port = viper.GetInt("server.port")
+	}
+	connString := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=true", user, password, server, port, database)
+	fmt.Print(connString)
+	db, err := sql.Open("mysql", connString)
+
 	if err != nil {
 		fmt.Print(err.Error())
 	}
+
+	db.SetMaxIdleConns(20)
+	db.SetMaxOpenConns(20)
+
 	defer db.Close()
 	// make sure connection is available
 	err = db.Ping()
@@ -82,8 +112,31 @@ func main() {
 			"count":  len(movies),
 		})
 	})
+	router.GET("/movie/:id", func(c *gin.Context) {
+		id := c.Param("id")
+		var (
+			movie Movie
+		)
+		rows, err := db.Query("select id, cname, ename, releaseTime, type, duration, director, actor, company, website, score, intro, imgPath from movieList WHERE id = ?", id)
+		if err != nil {
+			fmt.Print(err.Error())
+		}
+		movies := make([]Movie, 0)
+		for rows.Next() {
+			err = rows.Scan(&movie.ID, &movie.ChName, &movie.EnName, &movie.ReleaseTime, &movie.Type, &movie.Duration, &movie.Director, &movie.Actor, &movie.Company, &movie.Website, &movie.Score, &movie.Intro, &movie.ImgPath)
+			movies = append(movies, movie)
+			if err != nil {
+				fmt.Print(err.Error())
+			}
+		}
+		defer rows.Close()
+		jsonGoesToHTML(c, http.StatusOK, gin.H{
+			"result": movies,
+			"count":  len(movies),
+		})
+	})
 	router.Static("/static", "../static")
-	router.Run(":8080")
+	router.Run(":" + strconv.Itoa(server_port))
 }
 
 func writeContentType(w http.ResponseWriter, value []string) {
